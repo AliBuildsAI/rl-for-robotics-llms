@@ -8,14 +8,14 @@ Each notebook is self-contained, runs end-to-end on Google Colab (CPU or GPU), a
 
 | # | Algorithm | Environment | Notebook |
 |---|-----------|-------------|----------|
-| 1 | REINFORCE | CartPole-v1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-from-scratch/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) |
+| 1 | REINFORCE | CartPole-v1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) |
 
 ## Quick start
 
 ```bash
 # Clone and run locally
-git clone https://github.com/AliBuildsAI/rl-from-scratch.git
-cd rl-from-scratch
+git clone https://github.com/AliBuildsAI/rl-for-robotics-llms.git
+cd rl-for-robotics-llms
 pip install -r requirements.txt
 jupyter notebook notebooks/unit1_reinforce_cartpole.ipynb
 ```

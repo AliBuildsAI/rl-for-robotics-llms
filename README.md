@@ -17,7 +17,7 @@ Each notebook:
 | # | Notebook | Algorithms covered | Key concepts | Environment | Status |
 |---|----------|--------------------|--------------|-------------|--------|
 | 1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) | **REINFORCE** → **VPG** | Policy gradient theorem, reward-to-go, value-function baseline, advantage estimation | CartPole-v1 | ✅ Done |
-| 2 | — | **A3C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, async actors | LunarLander-v2 | 🔜 Coming soon |
+| 2 | [unit2_a2c_gae_lunarlander.ipynb](notebooks/unit2_a2c_gae_lunarlander.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_lunarlander.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs | LunarLander-v3 | ✅ Done |
 | 3 | — | **PPO** | Clipped surrogate objective, multiple epochs per rollout, why VPG collapses | BipedalWalker-v3 | 🔜 Coming soon |
 | 4 | — | **RLHF** | Reward model from human preferences, PPO fine-tuning of a language model | TinyLlama | 🔜 Coming soon |
 | 5 | — | **GRPO** | Group relative policy optimisation, chain-of-thought reasoning rewards | GSM8K (math) | 🔜 Coming soon |
@@ -34,8 +34,21 @@ Unit 1 builds up from the simplest possible policy gradient to Algorithm 1 (Vani
 **Part B — VPG with value baseline**
 - A separate `ValueNetwork` that learns `V(s)` by minimising MSE against `R_t`
 - Advantage `Â_t = R_t − V(s_t)` as a state-specific variance reduction
-- Side-by-side training curves showing VPG converges ~300 episodes faster
-- Full interpretation: why VPG learns faster *and* why it collapses harder — and how this motivates PPO's clipped objective
+- Training curves with qualitative interpretation (exact numbers vary by seed/device — see notebook)
+- Why both algorithms share the same root problem and how this motivates PPO's clipped objective
+
+### What's in Unit 2
+
+Unit 2 moves to a harder environment (LunarLander-v3) and adds two key ideas:
+
+**Part A — VPG baseline**
+- Re-runs Algorithm 1 from Unit 1 on LunarLander to show where it breaks
+
+**Part B — A2C + GAE**
+- GAE in its own standalone cell: the backward recurrence, λ interpolation, episode-boundary masking
+- A2C in a separate cell: N-step rollouts with 4 parallel environments, orthogonal weight init, logits-based Categorical
+- Hyperparameters from [rl-baselines3-zoo](https://github.com/DLR-RM/rl-baselines3-zoo) tuned config (γ=0.995)
+- Honest framing: A2C+GAE clearly improves over VPG but doesn't fully solve LunarLander — consistent with published SB3 benchmarks — which motivates PPO in Unit 3
 
 ---
 

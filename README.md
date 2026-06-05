@@ -17,7 +17,7 @@ Each notebook:
 | # | Notebook | Algorithms covered | Key concepts | Environment | Status |
 |---|----------|--------------------|--------------|-------------|--------|
 | 1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) | **REINFORCE** → **VPG** | Policy gradient theorem, reward-to-go, value-function baseline, advantage estimation | CartPole-v1 | ✅ Done |
-| 2 | [unit2_a2c_gae_lunarlander.ipynb](notebooks/unit2_a2c_gae_lunarlander.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_lunarlander.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs | LunarLander-v3 | ✅ Done |
+| 2 | [unit2_a2c_gae_acrobot.ipynb](notebooks/unit2_a2c_gae_acrobot.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_acrobot.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs | Acrobot-v1 | ✅ Done |
 | 3 | — | **PPO** | Clipped surrogate objective, multiple epochs per rollout, why VPG collapses | BipedalWalker-v3 | 🔜 Coming soon |
 | 4 | — | **RLHF** | Reward model from human preferences, PPO fine-tuning of a language model | TinyLlama | 🔜 Coming soon |
 | 5 | — | **GRPO** | Group relative policy optimisation, chain-of-thought reasoning rewards | GSM8K (math) | 🔜 Coming soon |
@@ -48,7 +48,7 @@ Unit 2 moves to a harder environment (LunarLander-v3) and adds two key ideas:
 - GAE in its own standalone cell: the backward recurrence, λ interpolation, episode-boundary masking
 - A2C in a separate cell: N-step rollouts with 4 parallel environments, orthogonal weight init, logits-based Categorical
 - Hyperparameters from [rl-baselines3-zoo](https://github.com/DLR-RM/rl-baselines3-zoo) tuned config (γ=0.995)
-- Honest framing: A2C+GAE clearly improves over VPG but doesn't fully solve LunarLander — consistent with published SB3 benchmarks — which motivates PPO in Unit 3
+- Clear result: VPG plateaus around −116 (not solved), A2C+GAE reaches −84 (✓ solved, threshold is −100)
 
 ---
 

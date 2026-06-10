@@ -18,7 +18,7 @@ Each notebook:
 |---|----------|-----------|--------------|-------------|--------|
 | 1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) | **REINFORCE → VPG** | Policy gradient theorem, reward-to-go, value-function baseline, advantage estimation | CartPole-v1 | ✅ VPG solves it |
 | 2 | [unit2_a2c_gae_acrobot.ipynb](notebooks/unit2_a2c_gae_acrobot.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_acrobot.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs, episode-boundary masking | Acrobot-v1 | ✅ A2C solves it, VPG doesn't |
-| 3 | — | **PPO** | Clipped surrogate objective, multiple epochs per rollout, importance sampling | LunarLander-v3 | 🔜 Coming soon |
+| 3 | [unit3_ppo_lunarlander.ipynb](notebooks/unit3_ppo_lunarlander.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit3_ppo_lunarlander.ipynb) | **PPO-Clip** | Importance sampling, surrogate loss, trust region, clipped objective, multi-epoch minibatch updates | LunarLander-v3 | ✅ PPO solves it, A2C doesn't |
 | 4 | — | **RLHF** | Reward model from human preferences, PPO fine-tuning of a language model | TinyLlama | 🔜 Coming soon |
 | 5 | — | **GRPO** | Group relative policy optimisation, chain-of-thought reasoning rewards | GSM8K (math) | 🔜 Coming soon |
 
@@ -28,7 +28,7 @@ mode of the previous algorithm.
 | Unit | Problem fixed | How |
 |------|--------------|-----|
 | 1 → 2 | MC return is high-variance | GAE interpolates between 1-step TD and MC |
-| 2 → 3 | No limit on gradient step size → collapse | PPO clips the probability ratio |
+| 2 → 3 | One gradient step per rollout, no step-size limit | PPO reuses each rollout for K epochs with clipped probability ratio |
 | 3 → 4 | Reward must be hand-engineered | Learn reward from human preferences |
 | 4 → 5 | RLHF needs human labels at scale | GRPO uses verifiable reasoning rewards |
 
@@ -51,6 +51,23 @@ Unit 1 builds up from the simplest possible policy gradient to full VPG in two p
 
 > Results vary by hardware and library version — seeds guarantee reproducibility
 > *within* the same Colab runtime, not across different machines.
+
+---
+
+### What's in Unit 3 — PPO-Clip (LunarLander-v3)
+
+Unit 3 applies the same GAE + rollout infrastructure from Unit 2, changing only the loss function:
+
+**Part A — A2C baseline on LunarLander**
+- Shows A2C plateaus at ~−147 (not solved) — same fundamental step-size problem as Unit 1
+
+**Part B — PPO-Clip**
+- Why naive multi-step reuse fails (distribution shift)
+- Importance sampling identity with proof (dynamics cancel from trajectory ratio)
+- Surrogate loss and why a trust region is needed
+- PPO-Clip formula: all 4 cases of `min(unclipped, clipped)` analysed with sign of advantage
+- Implementation: `n_steps=1024`, `batch_size=64`, `n_epochs=4` → 512 gradient steps per rollout (vs A2C's 1)
+- **Result: A2C −147 (not solved) vs PPO 265 (✓ solved, threshold=200)** — PPO solves at step ~606k
 
 ---
 

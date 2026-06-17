@@ -19,8 +19,10 @@ Each notebook:
 | 1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) | **REINFORCE → VPG** | Policy gradient theorem, reward-to-go, value-function baseline, advantage estimation | CartPole-v1 | ✅ VPG solves it |
 | 2 | [unit2_a2c_gae_acrobot.ipynb](notebooks/unit2_a2c_gae_acrobot.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_acrobot.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs, episode-boundary masking | Acrobot-v1 | ✅ A2C solves it, VPG doesn't |
 | 3 | [unit3_ppo_lunarlander.ipynb](notebooks/unit3_ppo_lunarlander.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit3_ppo_lunarlander.ipynb) | **PPO-Clip** | Importance sampling, surrogate loss, trust region, clipped objective, multi-epoch minibatch updates | LunarLander-v3 | ✅ PPO solves it, A2C doesn't |
-| 4 | — | **RLHF** | Reward model from human preferences, PPO fine-tuning of a language model | TinyLlama | 🔜 Coming soon |
-| 5 | — | **GRPO** | Group relative policy optimisation, chain-of-thought reasoning rewards | GSM8K (math) | 🔜 Coming soon |
+| 4 | [unit4_reward_model.ipynb](notebooks/unit4_reward_model.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit4_reward_model.ipynb) | **Reward Models** | LLM-as-MDP, Bradley-Terry model, preference data, scalar reward head | Qwen2.5-0.5B + UltraFeedback | 🆕 New |
+| 5 | — | **RLHF (PPO on LMs)** | 4-model setup, KL-anchored objective, per-token reward, reward hacking | Qwen2.5-0.5B + TRL | 🔜 Coming soon |
+| 6 | — | **DPO** | Closed-form optimal policy, direct preference loss, no reward model, no RL loop | Qwen2.5-0.5B + UltraFeedback | 🔜 Coming soon |
+| 7 | — | **RLVR + GRPO** | Verifiable rewards, group-relative baseline, no value network, DeepSeek-R1 recipe | Qwen2.5-1.5B + GSM8K | 🔜 Coming soon |
 
 The series tells **one connected story**: each unit fixes a specific failure
 mode of the previous algorithm.
@@ -29,8 +31,10 @@ mode of the previous algorithm.
 |------|--------------|-----|
 | 1 → 2 | MC return is high-variance | GAE interpolates between 1-step TD and MC |
 | 2 → 3 | One gradient step per rollout, no step-size limit | PPO reuses each rollout for K epochs with clipped probability ratio |
-| 3 → 4 | Reward must be hand-engineered | Learn reward from human preferences |
-| 4 → 5 | RLHF needs human labels at scale | GRPO uses verifiable reasoning rewards |
+| 3 → 4 | Language has no environment reward function | Learn a reward model from human preferences |
+| 4 → 5 | A reward model alone doesn't change the policy | PPO-fine-tune the LM against the reward model (RLHF) |
+| 5 → 6 | RLHF needs a reward model + a 4-model RL loop | DPO optimises preferences directly — no RM, no RL |
+| 6 → 7 | Preferences still need human labels at scale | RLVR uses verifiable rewards; GRPO drops the value network |
 
 ---
 
@@ -51,6 +55,30 @@ Unit 1 builds up from the simplest possible policy gradient to full VPG in two p
 
 > Results vary by hardware and library version — seeds guarantee reproducibility
 > *within* the same Colab runtime, not across different machines.
+
+---
+
+### What's in Unit 4 — Reward Models (Qwen2.5-0.5B + UltraFeedback)
+
+Unit 4 is the pivot from robotics RL to LLM RL. There is no environment reward
+function for language — so we learn one from human preference comparisons.
+
+**Theory**
+- The LLM as a (peculiar) MDP: state = prompt + tokens so far, action = next
+  token, transitions are deterministic, reward is terminal and learned
+- Five structural differences from robotics RL (action space, transitions,
+  sparse terminal reward, non-random init + KL anchor, learned reward)
+- The **Bradley-Terry model**: `P(y_w ≻ y_l) = σ(r(x,y_w) − r(x,y_l))`, and why
+  only the *difference* of rewards is identifiable
+- Reward-model architecture: pretrained LM backbone + a scalar value head
+
+**Code**
+- Computes the Bradley-Terry loss **by hand** on one pair first, then trains
+  with TRL's `RewardTrainer`
+- **Preference accuracy** on a held-out split (random = 50%)
+- A probe: hand-written good/bad answers, printing the two scalar rewards so you
+  *see* the model prefer the better one
+- The reward model trained here is the artifact **Unit 5** consumes
 
 ---
 
@@ -95,7 +123,8 @@ Modern AI is converging on RL as the key post-training ingredient:
 - **LLM alignment** — RLHF (GPT-4, Claude) and GRPO (DeepSeek-R1) use policy
   gradients to steer language models with human or automated reward signals
 
-The goal is to understand **REINFORCE → VPG → A2C+GAE → PPO → RLHF → GRPO**
+The goal is to understand
+**REINFORCE → VPG → A2C+GAE → PPO → RLHF → DPO → GRPO**
 as one connected story, where each step fixes a specific failure mode of the
 algorithm before it.
 
@@ -122,6 +151,10 @@ Or click an **Open in Colab** badge above.
 - Schulman et al. (2016) — *High-Dimensional Continuous Control Using Generalized Advantage Estimation*
 - Schulman et al. (2017) — *Proximal Policy Optimization Algorithms*
 - Ziegler et al. (2019) — *Fine-Tuning Language Models from Human Preferences*
+- Rafailov et al. (2023) — *Direct Preference Optimization: Your Language Model is Secretly a Reward Model*
+- Shao et al. (2024) — *DeepSeekMath: Pushing the Limits of Mathematical Reasoning* (GRPO)
 - DeepSeek-AI (2025) — *DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via RL*
+- Lambert — *RLHF Book* — <https://rlhfbook.com>
 - HuggingFace Deep RL Course — <https://huggingface.co/learn/deep-rl-course>
+- HuggingFace TRL — <https://github.com/huggingface/trl>
 - RL Baselines3 Zoo — <https://github.com/DLR-RM/rl-baselines3-zoo>

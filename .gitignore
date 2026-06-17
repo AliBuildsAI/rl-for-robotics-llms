@@ -14,12 +14,13 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Generated artifacts (keep training_curve.png and agent.gif out of git)
+# Generated artifacts (runtime plots/gifs kept out of git)
 notebooks/training_curve.png
+notebooks/comparison.png
 notebooks/agent.gif
 
 # macOS
 .DS_Store
 
-# Helper script used to generate notebooks
-generate_notebook.py
+# Helper scripts used to generate notebooks (kept local)
+generate_notebook*.py

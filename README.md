@@ -19,10 +19,11 @@ Each notebook:
 | 1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) | **REINFORCE → VPG** | Policy gradient theorem, reward-to-go, value-function baseline, advantage estimation | CartPole-v1 | ✅ VPG solves it |
 | 2 | [unit2_a2c_gae_acrobot.ipynb](notebooks/unit2_a2c_gae_acrobot.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_acrobot.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs, episode-boundary masking | Acrobot-v1 | ✅ A2C solves it, VPG doesn't |
 | 3 | [unit3_ppo_lunarlander.ipynb](notebooks/unit3_ppo_lunarlander.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit3_ppo_lunarlander.ipynb) | **PPO-Clip** | Importance sampling, surrogate loss, trust region, clipped objective, multi-epoch minibatch updates | LunarLander-v3 | ✅ PPO solves it, A2C doesn't |
-| 4 | [unit4_reward_model.ipynb](notebooks/unit4_reward_model.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit4_reward_model.ipynb) | **Reward Models** | LLM-as-MDP, Bradley-Terry model, preference data, scalar reward head | Qwen2.5-0.5B + UltraFeedback | 🆕 New |
-| 5 | — | **RLHF (PPO on LMs)** | 4-model setup, KL-anchored objective, per-token reward, reward hacking | Qwen2.5-0.5B + TRL | 🔜 Coming soon |
-| 6 | — | **DPO** | Closed-form optimal policy, direct preference loss, no reward model, no RL loop | Qwen2.5-0.5B + UltraFeedback | 🔜 Coming soon |
-| 7 | — | **RLVR + GRPO** | Verifiable rewards, group-relative baseline, no value network, DeepSeek-R1 recipe | Qwen2.5-1.5B + GSM8K | 🔜 Coming soon |
+| 4 | [unit4_sft.ipynb](notebooks/unit4_sft.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit4_sft.ipynb) | **SFT** | Instruction tuning, chat templates, completion-only loss masking, before/after generation | Qwen2.5-0.5B + Capybara | 🆕 New |
+| 5 | [unit5_reward_model.ipynb](notebooks/unit5_reward_model.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit5_reward_model.ipynb) | **Reward Models** | LLM-as-MDP, Bradley-Terry model, preference data, scalar reward head | Qwen2.5-0.5B + UltraFeedback | 🆕 New |
+| 6 | — | **RLHF (PPO on LMs)** | 4-model setup, KL-anchored objective, per-token reward, reward hacking | Qwen2.5-0.5B + TRL | 🔜 Coming soon |
+| 7 | — | **DPO** | Closed-form optimal policy, direct preference loss, no reward model, no RL loop | Qwen2.5-0.5B + UltraFeedback | 🔜 Coming soon |
+| 8 | — | **RLVR + GRPO** | Verifiable rewards, group-relative baseline, no value network, DeepSeek-R1 recipe | Qwen2.5-1.5B + GSM8K | 🔜 Coming soon |
 
 The series tells **one connected story**: each unit fixes a specific failure
 mode of the previous algorithm.
@@ -31,10 +32,11 @@ mode of the previous algorithm.
 |------|--------------|-----|
 | 1 → 2 | MC return is high-variance | GAE interpolates between 1-step TD and MC |
 | 2 → 3 | One gradient step per rollout, no step-size limit | PPO reuses each rollout for K epochs with clipped probability ratio |
-| 3 → 4 | Language has no environment reward function | Learn a reward model from human preferences |
-| 4 → 5 | A reward model alone doesn't change the policy | PPO-fine-tune the LM against the reward model (RLHF) |
-| 5 → 6 | RLHF needs a reward model + a 4-model RL loop | DPO optimises preferences directly — no RM, no RL |
-| 6 → 7 | Preferences still need human labels at scale | RLVR uses verifiable rewards; GRPO drops the value network |
+| 3 → 4 | A pretrained LM doesn't follow instructions | SFT on (instruction, response) demos |
+| 4 → 5 | SFT only imitates; no notion of better vs worse | Learn a reward model from human preferences |
+| 5 → 6 | A reward model alone doesn't change the policy | PPO-fine-tune the LM against the reward model (RLHF) |
+| 6 → 7 | RLHF needs a reward model + a 4-model RL loop | DPO optimises preferences directly — no RM, no RL |
+| 7 → 8 | Preferences still need human labels at scale | RLVR uses verifiable rewards; GRPO drops the value network |
 
 ---
 
@@ -58,10 +60,34 @@ Unit 1 builds up from the simplest possible policy gradient to full VPG in two p
 
 ---
 
-### What's in Unit 4 — Reward Models (Qwen2.5-0.5B + UltraFeedback)
+### What's in Unit 4 — SFT (Qwen2.5-0.5B + Capybara)
 
-Unit 4 is the pivot from robotics RL to LLM RL. There is no environment reward
-function for language — so we learn one from human preference comparisons.
+Unit 4 is the first hands-on LLM stage: turn a *base* model that only predicts
+internet text into one that follows instructions. The model trained here is the
+starting point for Units 5–8.
+
+**Theory**
+- Where SFT sits: pretraining → **SFT** → RLHF, and why imitation has a ceiling
+- SFT = the *same* next-token loss as pretraining, on curated (instruction,
+  response) demos with the chat template
+- **Completion-only loss masking**: set prompt-token labels to `-100` so loss is
+  computed on the response only — the one SFT-specific idea (and a common
+  interview question)
+
+**Code**
+- Loads the **base** Qwen2.5-0.5B with `AutoModelForCausalLM`
+- Builds the masked label tensor **by hand** so you see the `-100`s, then trains
+  with TRL's `SFTTrainer` (`completion_only_loss=True`)
+- **Before/after generation**: the base model rambles; the SFT model answers and
+  stops cleanly
+- Saves the checkpoint that **Unit 5** consumes
+
+---
+
+### What's in Unit 5 — Reward Models (Qwen2.5-0.5B + UltraFeedback)
+
+There is no environment reward function for language — so we learn one from human
+preference comparisons.
 
 **Theory**
 - The LLM as a (peculiar) MDP: state = prompt + tokens so far, action = next
@@ -75,10 +101,11 @@ function for language — so we learn one from human preference comparisons.
 **Code**
 - Computes the Bradley-Terry loss **by hand** on one pair first, then trains
   with TRL's `RewardTrainer`
-- **Preference accuracy** on a held-out split (random = 50%)
+- **Preference accuracy** on a held-out split (random = 50%), broken down by
+  preference clarity (reproduces Llama 2's Table 8 on our own model)
 - A probe: hand-written good/bad answers, printing the two scalar rewards so you
   *see* the model prefer the better one
-- The reward model trained here is the artifact **Unit 5** consumes
+- The reward model trained here is the artifact **Unit 6** consumes
 
 ---
 

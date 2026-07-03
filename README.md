@@ -19,7 +19,7 @@ Each notebook:
 | 1 | [unit1_reinforce_cartpole.ipynb](notebooks/unit1_reinforce_cartpole.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit1_reinforce_cartpole.ipynb) | **REINFORCE → VPG** | Policy gradient theorem, reward-to-go, value-function baseline, advantage estimation | CartPole-v1 | ✅ VPG solves it |
 | 2 | [unit2_a2c_gae_acrobot.ipynb](notebooks/unit2_a2c_gae_acrobot.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit2_a2c_gae_acrobot.ipynb) | **A2C + GAE** | Generalised Advantage Estimation, bias-variance trade-off, N-step rollouts, parallel envs, episode-boundary masking | Acrobot-v1 | ✅ A2C solves it, VPG doesn't |
 | 3 | [unit3_ppo_lunarlander.ipynb](notebooks/unit3_ppo_lunarlander.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit3_ppo_lunarlander.ipynb) | **PPO-Clip** | Importance sampling, surrogate loss, trust region, clipped objective, multi-epoch minibatch updates | LunarLander-v3 | ✅ PPO solves it, A2C doesn't |
-| 4 | [unit4_sft.ipynb](notebooks/unit4_sft.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit4_sft.ipynb) | **SFT** | Instruction tuning, chat templates, completion-only loss masking, before/after generation | Qwen2.5-0.5B + Capybara | 🆕 New |
+| 4 | [unit4_sft.ipynb](notebooks/unit4_sft.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit4_sft.ipynb) | **SFT** | Instruction tuning, chat templates, completion-only loss masking, from-scratch training loop | OLMo-2-1B + No Robots | 🆕 New |
 | 5 | [unit5_reward_model.ipynb](notebooks/unit5_reward_model.ipynb) · [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AliBuildsAI/rl-for-robotics-llms/blob/main/notebooks/unit5_reward_model.ipynb) | **Reward Models** | LLM-as-MDP, Bradley-Terry model, preference data, scalar reward head | Qwen2.5-0.5B + UltraFeedback | 🆕 New |
 | 6 | — | **RLHF (PPO on LMs)** | 4-model setup, KL-anchored objective, per-token reward, reward hacking | Qwen2.5-0.5B + TRL | 🔜 Coming soon |
 | 7 | — | **DPO** | Closed-form optimal policy, direct preference loss, no reward model, no RL loop | Qwen2.5-0.5B + UltraFeedback | 🔜 Coming soon |
@@ -60,11 +60,12 @@ Unit 1 builds up from the simplest possible policy gradient to full VPG in two p
 
 ---
 
-### What's in Unit 4 — SFT (Qwen2.5-0.5B + Capybara)
+### What's in Unit 4 — SFT (OLMo-2-1B + No Robots)
 
 Unit 4 is the first hands-on LLM stage: turn a *base* model that only predicts
-internet text into one that follows instructions. The model trained here is the
-starting point for Units 5–8.
+internet text into one that follows instructions. Built on **Nathan Lambert's
+reference SFT code** (RLHF book, `code/instruction_tuning`) so the recipe is
+known-good, using his exact model + dataset.
 
 **Theory**
 - Where SFT sits: pretraining → **SFT** → RLHF, and why imitation has a ceiling
@@ -73,14 +74,15 @@ starting point for Units 5–8.
 - **Completion-only loss masking**: set prompt-token labels to `-100` so loss is
   computed on the response only — the one SFT-specific idea (and a common
   interview question)
+- Why val loss is a *poor* SFT metric (it often rises) — judge by generations
 
 **Code**
-- Loads the **base** Qwen2.5-0.5B with `AutoModelForCausalLM`
-- Builds the masked label tensor **by hand** so you see the `-100`s, then trains
-  with TRL's `SFTTrainer` (`completion_only_loss=True`)
-- **Before/after generation**: the base model rambles; the SFT model answers and
-  stops cleanly
-- Saves the checkpoint that **Unit 5** consumes
+- Loads the **base** OLMo-2-1B, borrowing the chat template from the SFT variant
+- Builds the masked labels **by hand** (his `_encode_row`) so you see the `-100`s
+- A **from-scratch PyTorch training loop** (no `Trainer`): AdamW + warmup/linear
+  decay, gradient accumulation, manual shifted cross-entropy, fp32 master weights
+- **Samples generations every 50 steps** — watch it go from rambling → clean answer
+- **Before/after generation** + training-loss curve; saves the checkpoint for later
 
 ---
 
